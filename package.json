@@ -1,7 +1,26 @@
 {
+  "name": "jwt-api-fullstack",
+  "version": "1.0.0",
+  "description": "Full-stack JWT auth loyihasi: Express + MongoDB backend va Next.js frontend",
+  "main": "2-dars-next-tailwind/backend/server.js",
+  "scripts": {
+    "start": "node 2-dars-next-tailwind/backend/server.js",
+    "dev": "nodemon 2-dars-next-tailwind/backend/server.js",
+    "seed": "node 2-dars-next-tailwind/backend/seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   }
