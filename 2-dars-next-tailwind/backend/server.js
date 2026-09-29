@@ -55,10 +55,15 @@ const swaggerOptions = {
                 url: "/", // nisbiy URL — Swagger o'zi turgan manzilga so'rov yuboradi (lokal va Render'da ham ishlaydi)
                 description: "Joriy server",
             },
-            {
-                url: `http://localhost:${PORT}`,
-                description: "Lokal server",
-            },
+            // Lokal variant faqat lokal rejimda ko'rinadi (Render'da chalkashmaslik uchun)
+            ...(process.env.NODE_ENV === "production"
+                ? []
+                : [
+                      {
+                          url: `http://localhost:${PORT}`,
+                          description: "Lokal server",
+                      },
+                  ]),
         ],
         components: {
             securitySchemes: {
