@@ -177,6 +177,7 @@ const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
 // ======================================
 
 let dbConnected = false;
+let retryTimer = null;
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -184,27 +185,46 @@ if (!MONGO_URI) {
     console.log("   Render → Environment → MONGO_URI=qo'shing yoki repo'da backend/.env borligini tekshiring.");
 }
 
-mongoose
-    .connect(MONGO_URI || "", {
-        serverSelectionTimeoutMS: 10000,
-        dbName: process.env.MONGO_DB || undefined
-    })
-    .then(async () => {
-        dbConnected = true;
-        console.log("MongoDB ulandi ✅ host:", mongoose.connection.host || "(noma'lum)");
-    })
-    .catch((error) => {
-        dbConnected = false;
-        console.log("MongoDB ulanishda xato ❌");
-        console.log("Xato nomi:", error.name);
-        console.log("Xato:", error.message);
-        if (error.message && error.message.includes("authentication")) {
-            console.log("→ Parol/username xato yoki maxsus belgilar URL-encode qilinmagan.");
-        }
-        if (error.name === "MongooseServerSelectionError") {
-            console.log("→ Atlas Network Access'da IP ruxsat berilmagan (Render uchun 0.0.0.0/0 kerak).");
-        }
-    });
+function connectMongo() {
+    mongoose
+        .connect(MONGO_URI || "", {
+            serverSelectionTimeoutMS: 10000,
+            dbName: process.env.MONGO_DB || undefined
+        })
+        .then(() => {
+            dbConnected = true;
+            console.log("MongoDB ulandi ✅ host:", mongoose.connection.host || "(noma'lum)");
+        })
+        .catch((error) => {
+            dbConnected = false;
+            console.log("MongoDB ulanishda xato ❌");
+            console.log("Xato nomi:", error.name);
+            console.log("Xato:", error.message);
+            if (error.message && error.message.includes("authentication")) {
+                console.log("→ Parol/username xato yoki maxsus belgilar URL-encode qilinmagan.");
+            }
+            if (error.name === "MongooseServerSelectionError") {
+                console.log("→ Atlas Network Access'da IP ruxsat berilmagan bo'lishi mumkin (0.0.0.0/0 kerak).");
+            }
+            console.log("→ 10 sekunddan keyin qayta uriniladi...");
+            if (!retryTimer) {
+                retryTimer = setInterval(() => {
+                    if (dbConnected) {
+                        clearInterval(retryTimer);
+                        retryTimer = null;
+                        return;
+                    }
+                    console.log("MongoDB'ga qayta ulanmoqda...");
+                    mongoose.connect(MONGO_URI || "", {
+                        serverSelectionTimeoutMS: 10000,
+                        dbName: process.env.MONGO_DB || undefined
+                    }).catch(() => {}); // xatoni interval o'zi ko'radi, jim davom etadi
+                }, 10000);
+            }
+        });
+}
+
+connectMongo();
 
 // Ulanish uzilib qolsa ham holatni yangilab boradi
 mongoose.connection.on("disconnected", () => { dbConnected = false; });
