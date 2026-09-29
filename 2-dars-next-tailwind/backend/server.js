@@ -176,15 +176,49 @@ const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
 // MONGODB ULANISH
 // ======================================
 
+let dbConnected = false;
+
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+    console.log("❌ MONGO_URI env o'zgaruvchisi topilmadi!");
+    console.log("   Render → Environment → MONGO_URI=qo'shing yoki repo'da backend/.env borligini tekshiring.");
+}
+
 mongoose
-    .connect(process.env.MONGO_URI)
+    .connect(MONGO_URI || "", {
+        serverSelectionTimeoutMS: 10000,
+        dbName: process.env.MONGO_DB || undefined
+    })
     .then(async () => {
-        console.log("MongoDB ulandi ✅");
+        dbConnected = true;
+        console.log("MongoDB ulandi ✅ host:", mongoose.connection.host || "(noma'lum)");
     })
     .catch((error) => {
+        dbConnected = false;
         console.log("MongoDB ulanishda xato ❌");
-        console.log(error.message);
+        console.log("Xato nomi:", error.name);
+        console.log("Xato:", error.message);
+        if (error.message && error.message.includes("authentication")) {
+            console.log("→ Parol/username xato yoki maxsus belgilar URL-encode qilinmagan.");
+        }
+        if (error.name === "MongooseServerSelectionError") {
+            console.log("→ Atlas Network Access'da IP ruxsat berilmagan (Render uchun 0.0.0.0/0 kerak).");
+        }
     });
+
+// Ulanish uzilib qolsa ham holatni yangilab boradi
+mongoose.connection.on("disconnected", () => { dbConnected = false; });
+mongoose.connection.on("connected", () => { dbConnected = true; });
+
+// Holatni tekshirish uchun oddiy endpoint
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        ok: true,
+        mongodb: dbConnected ? "ulangan ✅" : "ulanmagan ❌",
+        mongoUriSet: Boolean(process.env.MONGO_URI),
+        time: new Date().toISOString()
+    });
+});
 
 
 // ======================================

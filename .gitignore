@@ -17,3 +17,10 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Frontend — faqat backend push qilinadi
+2-dars-next-tailwind/frontend/
+
+# Ishchi qeziklar
+full_step10_output.txt
+original_server_view.txt
