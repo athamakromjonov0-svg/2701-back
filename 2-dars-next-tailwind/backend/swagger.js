@@ -7,6 +7,10 @@ module.exports = {
   },
   servers: [
     {
+      url: "/", // nisbiy URL — Swagger o'zi turgan manzilga so'rov yuboradi
+      description: "Joriy server"
+    },
+    {
       url: "http://localhost:5432",
       description: "Local Backend Server"
     }

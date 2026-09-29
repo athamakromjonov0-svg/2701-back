@@ -52,8 +52,12 @@ const swaggerOptions = {
         },
         servers: [
             {
+                url: "/", // nisbiy URL — Swagger o'zi turgan manzilga so'rov yuboradi (lokal va Render'da ham ishlaydi)
+                description: "Joriy server",
+            },
+            {
                 url: `http://localhost:${PORT}`,
-                description: "Backend server",
+                description: "Lokal server",
             },
         ],
         components: {
