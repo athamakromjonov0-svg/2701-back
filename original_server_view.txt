@@ -1,0 +1,158 @@
+Created At: 2026-09-22T15:21:40+05:00
+Completed At: 2026-09-22T15:21:40+05:00
+File Path: `file:///C:/Users/user/Desktop/2-dars-next-tailwind-fixed/2-dars-next-tailwind/backend/server.js`
+Total Lines: 1326
+Total Bytes: 32398
+Showing lines 1 to 150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: const express = require("express");
+2: const path = require("path");
+3: const jwt = require("jsonwebtoken");
+4: const swaggerUi = require("swagger-ui-express");
+5: const swaggerJsdoc = require("swagger-jsdoc");
+6: require("dotenv").config();
+7: 
+8: const app = express();
+9: const PORT = process.env.PORT || 5432;
+10: 
+11: // .env faylda secret bo'lmasa ham server crash qilmasligi uchun
+12: const JWT_ACCESS_SECRET =
+13:     process.env.JWT_ACCESS_SECRET || "access_dev_secret";
+14: 
+15: const JWT_REFRESH_SECRET =
+16:     process.env.JWT_REFRESH_SECRET || "refresh_dev_secret";
+17: 
+18: app.use(express.json());
+19: 
+20: 
+21: // Express 5'da body bo'sh kelisa req.body = undefined bo'ladi
+22: // (TypeError: Cannot destructure property 'username' of 'req.body').
+23: // Shuning uchun req.body doim object bo'lishini ta'minlaymiz.
+24: app.use((req, res, next) => {
+25:     if (!req.body) req.body = {};
+26: 
+27:     next();
+28: });
+29: 
+30: 
+31: // ======================================================
+32: // SWAGGER
+33: // ======================================================
+34: 
+35: const swaggerOptions = {
+36:     definition: {
+37:         openapi: "3.0.0",
+38: 
+39:         info: {
+40:             title: "JWT API",
+41:             version: "1.0.0",
+42:             description:
+43:                 "Register, Login, Access Token, Refresh Token va User API",
+44:         },
+45: 
+46:         servers: [
+47:             {
+48:                 url: `http://localhost:${PORT}`,
+49:             },
+50:         ],
+51: 
+52:         components: {
+53:             securitySchemes: {
+54:                 bearerAuth: {
+55:                     type: "http",
+56:                     scheme: "bearer",
+57:                     bearerFormat: "JWT",
+58:                 },
+59:             },
+60:         },
+61:     },
+62: 
+63:     apis: [path.join(__dirname, "server.js")],
+64: };
+65: 
+66: const fullSpec = swaggerJsdoc(swaggerOptions);
+67: 
+68: // ======================================================
+69: // 1-SWAGGER PAGE: ODDIY API (/api-docs)
+70: // Bu yerda FAQAT user endpointlari ko'rinadi
+71: // (admin endpointlari yashirilgan)
+72: // ======================================================
+73: 
+74: const publicSpec = {
+75:     ...fullSpec,
+76: 
+77:     info: {
+78:         title: "JWT API",
+79:         version: "1.0.0",
+80:         description:
+81:             "Register, Login, Access Token, Refresh Token va User API. Admin endpointlari uchun /admin-docs sahifasiga o'ting.",
+82:     },
+83: 
+84:     tags: [
+85:         {
+86:             name: "Users",
+87:             description: "Userlar bilan ishlash (ochiq endpointlar)",
+88:         },
+89:         {
+90:             name: "Auth",
+91:             description:
+92:                 "Ro'yxatdan o'tish, login va token yangilash",
+93:         },
+94:     ],
+95: 
+96:     paths: Object.fromEntries(
+97:         Object.entries(fullSpec.paths || {}).filter(
+98:             ([p]) => !p.startsWith("/admin")
+99:         )
+100:     ),
+101: };
+102: 
+103: // ======================================================
+104: // SWAGGER SAHIFALARI
+105: // Next.js proxy trailing slashni olib tashlab yuboradi,
+106: // shuning uchun redirect ISHLATILMAYDI — HTML doim exact
+107: // path'da qaytariladi (aks holda 301 → 301 cheksiz loop).
+108: // ======================================================
+109: 
+110: const swaggerUiOptions = {
+111:     // Tokenni sahifa refresh bo'lganda ham saqlab qoladi
+112:     swaggerOptions: { persistAuthorization: true },
+113: };
+114: 
+115: // HTML'dagi relative asset yo'llarini ("./swagger-ui.css") absolutga
+116: // almashtiramiz: sahifa qaysi path'da ochilsa ham assetlar to'g'ri yuklanadi
+117: const fixAssetUrls = (html, basePath) =>
+118:     html
+119:         .split('href="./')
+120:         .join(`href="${basePath}/`)
+121:         .split('src="./')
+122:         .join(`src="${basePath}/`);
+123: 
+124: const publicHtml = fixAssetUrls(
+125:     swaggerUi.generateHTML(publicSpec, {
+126:         ...swaggerUiOptions,
+127:         customSiteTitle: "JWT API — Userlar",
+128:     }),
+129:     "/api-docs"
+130: );
+131: 
+132: app.get("/api-docs", (req, res) => res.send(publicHtml));
+133: 
+134: // Statik fayllar + shu spec'ga tegishli swagger-ui-init.js
+135: // (serveFiles — ko'p spec'li loyihalar uchun rasmiy tavsiya etilgan usul)
+136: app.use("/api-docs", swaggerUi.serveFiles(publicSpec, swaggerUiOptions));
+137: 
+138: // ======================================================
+139: // 2-SWAGGER PAGE: ADMIN API (/admin-docs)
+140: // /admin desa ham shu sahifaga yo'naltiriladi
+141: // ======================================================
+142: 
+143: const adminSpec = {
+144:     ...fullSpec,
+145: 
+146:     info: {
+147:         title: "👑 ADMIN API",
+148:         version: "1.0.0",
+149:         description:
+150:             "1) pastdagi POST /login bilan token oling (ali_uz / test1234), 2) yuqoridagi \"Authorize\" tugmasiga accessToken'ni qo'ying, 3) admin endpointlarini ishlatishingiz mumkin.",
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
