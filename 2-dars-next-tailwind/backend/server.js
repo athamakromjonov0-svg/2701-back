@@ -53,11 +53,11 @@ const swaggerOptions = {
         servers: [
             {
                 url: "/", // nisbiy URL — Swagger o'zi turgan manzilga so'rov yuboradi (lokal va Render'da ham ishlaydi)
-                description: "Joriy server",
+                description: "✅ Joriy server — SHUNI TANLANG (Render va lokalda ishlaydi)",
             },
             {
                 url: `http://localhost:${PORT}`,
-                description: "Lokal server (kompyuteringizda server ishga tushirilgan bo'lishi kerak)",
+                description: "❌ Lokal server — Render'da ishlamaydi! Faqat kompyuterda node server.js ishga tushirilgan bo'lsa",
             },
         ],
         components: {
